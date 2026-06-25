@@ -54,6 +54,35 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .topbar h1{font-size:18px;font-weight:700;color:var(--ink)}
 .content{padding:28px;flex:1}
 
+/* ── MOBILE NAV ── */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:64px;background:linear-gradient(180deg,#3B2F28,#2a2018);z-index:20;border-top:1px solid rgba(255,255,255,.08)}
+.mob-nav-inner{display:flex;height:100%}
+.mob-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:rgba(255,255,255,.5);font-size:11px;font-weight:600;cursor:pointer;transition:color .15s;font-family:inherit;padding:0}
+.mob-btn .micon{font-size:22px;line-height:1}
+.mob-btn.active{color:#fff}
+.mob-btn.active .micon{filter:drop-shadow(0 0 6px rgba(188,108,73,.8))}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .mob-nav{display:flex}
+  .main{margin-left:0;padding-bottom:64px}
+  .topbar{padding:0 16px;height:52px}
+  .topbar h1{font-size:16px}
+  .content{padding:16px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-card{padding:14px}
+  .stat-card .value{font-size:22px}
+  .table-wrap{border-radius:12px}
+  .modal{max-width:100%;margin:0;border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:92vh}
+  .modal-bg{align-items:flex-end;padding:0}
+  .form-row{grid-template-columns:1fr}
+  .search-bar{flex-direction:column}
+  .search-bar input{width:100%}
+  table{font-size:12px}
+  th,td{padding:8px 10px}
+  .btn-sm{padding:5px 10px;font-size:12px}
+}
+
 /* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
 .stat-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
@@ -231,6 +260,32 @@ tr:hover td{background:rgba(237,227,212,.3)}
     </div>
   </aside>
 
+  <!-- Mobile bottom nav -->
+  <nav class="mob-nav">
+    <div class="mob-nav-inner">
+      <button class="mob-btn active" onclick="goto('dashboard')" id="mnav-dashboard">
+        <span class="micon">📊</span>
+        <span>Ringkasan</span>
+      </button>
+      <button class="mob-btn" onclick="goto('products')" id="mnav-products">
+        <span class="micon">🧴</span>
+        <span>Produk</span>
+      </button>
+      <button class="mob-btn" onclick="goto('orders')" id="mnav-orders">
+        <span class="micon">📦</span>
+        <span>Pesanan</span>
+      </button>
+      <button class="mob-btn" onclick="goto('settings')" id="mnav-settings">
+        <span class="micon">🧪</span>
+        <span>Racikan</span>
+      </button>
+      <button class="mob-btn" onclick="doLogout()" id="mnav-logout">
+        <span class="micon">🚪</span>
+        <span>Keluar</span>
+      </button>
+    </div>
+  </nav>
+
   <!-- Main content -->
   <div class="main">
     <div class="topbar">
@@ -363,7 +418,7 @@ function init() {
 
 function initSupabase() {
   sb = supabase.createClient(
-    'https://aofbrcryxxjmminyyfpiyue.supabase.co',
+    'https://aofbrcrxxjmminyfpiue.supabase.co',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZmJyY3J4eGptbWlueWZwaXVlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjM4NDQwNCwiZXhwIjoyMDk3OTYwNDA0fQ.Vc3xtIDpvm09veBA7ohjCZtOOyehbGMfZc-6sNQTi3Y'
   );
 }
@@ -402,13 +457,32 @@ function resetSetup() { doLogout(); }
 async function startApp() {
   show('app');
   el('topbar-user').textContent = 'temanmandi.id';
-  el('s-supabase-url').textContent = 'https://aofbrcryxxjmminyyfpiyue.supabase.co';
+  el('s-supabase-url').textContent = 'https://aofbrcrxxjmminyfpiue.supabase.co';
   await loadAll();
   goto('dashboard');
 }
 
 async function loadAll() {
-  await Promise.all([loadProducts(), loadOrders(), loadSettings()]);
+  try {
+    await Promise.all([loadProducts(), loadOrders(), loadSettings()]);
+  } catch(e) {
+    showConnError(e.message);
+  }
+}
+
+function showConnError(msg) {
+  const isNetErr = !msg || msg.includes('fetch') || msg.includes('network') || msg.includes('Failed');
+  const hint = isNetErr
+    ? `⚠️ Tidak bisa konek ke Supabase.<br><br>Kemungkinan penyebab:<br>1. <b>Project Supabase di-pause</b> → buka <a href="https://supabase.com/dashboard" target="_blank" style="color:var(--primary)">supabase.com/dashboard</a> lalu klik <b>Restore</b><br>2. Belum jalankan <b>supabase-schema.sql</b> di SQL Editor<br>3. Tidak ada koneksi internet`
+    : `⚠️ Error: ${msg}<br><br>Pastikan <b>supabase-schema.sql</b> sudah dijalankan di Supabase SQL Editor.`;
+  const existing = document.getElementById('conn-error-banner');
+  if (existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.id = 'conn-error-banner';
+  banner.style.cssText = 'background:#FEE2E2;border:1.5px solid #FECACA;border-radius:14px;padding:18px 20px;margin-bottom:20px;font-size:13.5px;line-height:1.8;color:#7F1D1D';
+  banner.innerHTML = hint + '<br><br><button class="btn btn-sm" style="background:#DC2626;color:#fff;margin-top:4px" onclick="location.reload()">🔄 Coba Lagi</button>';
+  const content = document.querySelector('.content');
+  if (content) content.prepend(banner);
 }
 
 // ============================================================
@@ -676,6 +750,7 @@ function goto(page) {
   pages.forEach(p => {
     el('page-'+p).style.display = p === page ? '' : 'none';
     el('nav-'+p).classList.toggle('active', p === page);
+    const mb = el('mnav-'+p); if (mb) mb.classList.toggle('active', p === page);
   });
   el('page-title').textContent = { dashboard:'📊 Ringkasan', products:'🧴 Koleksi Produk', orders:'📦 Pesanan Masuk', settings:'🧪 Racikan' }[page];
 }
