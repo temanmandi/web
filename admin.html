@@ -98,6 +98,9 @@ tr:hover td{background:rgba(237,227,212,.3)}
 /* ── IMG PREVIEW ── */
 .img-preview{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;border:1.5px solid var(--line);display:none;margin-top:8px}
 .img-preview.show{display:block}
+#pf-upload-area:hover{border-color:var(--primary)}
+#pf-upload-area.has-img{padding:0;border-style:solid}
+.img-preview.show{display:block}
 
 /* ── SEARCH ── */
 .search-bar{display:flex;gap:10px;align-items:center;margin-bottom:16px}
@@ -197,9 +200,31 @@ tr:hover td{background:rgba(237,227,212,.3)}
       </div>
       <div class="field"><label>Varian (pisahkan dengan koma)</label><input id="pf-variants" placeholder="Original, Rose, Lavender" /></div>
       <div class="field">
-        <label>URL Gambar</label>
-        <input id="pf-img" placeholder="https://..." oninput="previewImg()" />
-        <img id="pf-img-preview" class="img-preview" />
+        <label>Foto Produk</label>
+        <!-- Upload area -->
+        <div id="pf-upload-area" onclick="el('pf-file').click()" style="border:2px dashed var(--line);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;background:var(--soft)">
+          <div id="pf-upload-hint" style="color:var(--muted);font-size:13px">
+            <div style="font-size:28px;margin-bottom:6px">📷</div>
+            <div style="font-weight:600">Klik untuk pilih foto</div>
+            <div style="font-size:11px;margin-top:3px">JPG, PNG, WEBP · maks 2MB</div>
+          </div>
+          <img id="pf-img-preview" class="img-preview" style="margin-top:0" />
+        </div>
+        <input type="file" id="pf-file" accept="image/*" style="display:none" onchange="onFileChange(this)" />
+        <!-- Progress bar -->
+        <div id="pf-upload-progress" style="display:none;margin-top:8px">
+          <div style="height:4px;background:var(--line);border-radius:4px;overflow:hidden">
+            <div id="pf-upload-bar" style="height:100%;background:var(--primary);width:0%;transition:width .3s"></div>
+          </div>
+          <div id="pf-upload-label" style="font-size:11px;color:var(--muted);margin-top:4px">Mengupload...</div>
+        </div>
+        <!-- Or URL fallback -->
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <div style="flex:1;height:1px;background:var(--line)"></div>
+          <span style="font-size:11px;color:var(--muted)">atau pakai URL</span>
+          <div style="flex:1;height:1px;background:var(--line)"></div>
+        </div>
+        <input id="pf-img" placeholder="https://..." oninput="previewImg()" style="margin-top:8px" />
       </div>
       <div class="field" style="display:flex;align-items:center;gap:10px">
         <input type="checkbox" id="pf-active" style="width:16px;height:16px" checked />
@@ -532,6 +557,11 @@ function openProductModal(id = null) {
   el('pf-sold').value = p?.sold || '';
   el('pf-variants').value = (p?.variants || []).join(', ');
   el('pf-img').value = p?.img || '';
+  el('pf-file').value = '';
+  el('pf-upload-progress').style.display = 'none';
+  el('pf-upload-bar').style.width = '0%';
+  el('pf-upload-area').className = p?.img ? 'has-img' : '';
+  el('pf-upload-hint').style.display = p?.img ? 'none' : '';
   el('pf-active').checked = p ? p.active : true;
   el('pf-err').textContent = '';
   previewImg();
@@ -545,6 +575,57 @@ function previewImg() {
   const img = el('pf-img-preview');
   img.src = src;
   img.className = 'img-preview ' + (src ? 'show' : '');
+  const area = el('pf-upload-area');
+  if (area) area.className = src ? 'has-img' : '';
+  const hint = el('pf-upload-hint');
+  if (hint) hint.style.display = src ? 'none' : '';
+}
+
+async function onFileChange(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('Foto maks 2MB ya! 🙈', 'err'); return; }
+
+  // Preview lokal dulu
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = el('pf-img-preview');
+    img.src = e.target.result;
+    img.className = 'img-preview show';
+    el('pf-upload-area').className = 'has-img';
+    el('pf-upload-hint').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+
+  // Upload ke Supabase Storage
+  el('pf-upload-progress').style.display = '';
+  el('pf-upload-bar').style.width = '30%';
+  el('pf-upload-label').textContent = 'Mengupload foto...';
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  const fileName = 'product_' + Date.now() + '.' + ext;
+
+  try {
+    const { data, error } = await sb.storage
+      .from('products')
+      .upload(fileName, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+
+    el('pf-upload-bar').style.width = '80%';
+
+    if (error) throw error;
+
+    const { data: urlData } = sb.storage.from('products').getPublicUrl(fileName);
+    const publicUrl = urlData.publicUrl;
+
+    el('pf-img').value = publicUrl;
+    el('pf-upload-bar').style.width = '100%';
+    el('pf-upload-label').textContent = '✓ Foto berhasil diupload!';
+    setTimeout(() => { el('pf-upload-progress').style.display = 'none'; }, 1500);
+    toast('Foto diupload ✓');
+  } catch (err) {
+    el('pf-upload-progress').style.display = 'none';
+    toast('Gagal upload: ' + err.message, 'err');
+  }
 }
 
 async function saveProduct() {
