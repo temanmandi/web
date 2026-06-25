@@ -2678,7 +2678,40 @@
         <div style="position:absolute;width:80px;height:80px;border-radius:50%;background:var(--soft,#EDE3D4);top:-18px;left:-10px;animation:tmfloat 5s ease-in-out infinite"></div>
         <div style="position:absolute;width:46px;height:46px;border-radius:50%;background:var(--primary,#BC6C49);opacity:.18;bottom:30px;right:-6px;animation:tmfloat 4s ease-in-out infinite .5s"></div>
         <div style="position:relative;background:#DCE6DD;border-radius:28px;padding:18px;box-shadow:0 30px 60px -28px rgba(60,40,30,.4)">
-          <image-slot id="tm-hero" placeholder="Taruh foto produk kamu di sini" style="width:100%;aspect-ratio:4/5;border-radius:18px;display:block"></image-slot>
+          <div id="tm-bubble-scene" style="width:100%;aspect-ratio:4/5;border-radius:18px;display:block;background:linear-gradient(160deg,#DCE6DD 0%,#c8d9ca 100%);position:relative;overflow:hidden">
+            <!-- Bubbles -->
+            <style>
+              @keyframes bub-rise{0%{transform:translateY(110%) scale(1);opacity:0}10%{opacity:.7}90%{opacity:.4}100%{transform:translateY(-20%) scale(1.05);opacity:0}}
+              @keyframes bub-sway{0%,100%{margin-left:0}50%{margin-left:12px}}
+              @keyframes duck-bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
+              @keyframes steam{0%,100%{opacity:0;transform:translateY(0) scaleX(1)}30%{opacity:.5}70%{opacity:.3;transform:translateY(-30px) scaleX(1.4)}100%{opacity:0;transform:translateY(-50px) scaleX(.8)}}
+              #tm-bubble-scene .sb{position:absolute;border-radius:50%;background:radial-gradient(circle at 32% 32%,rgba(255,255,255,.85),rgba(188,214,192,.25));border:1.5px solid rgba(255,255,255,.6);animation:bub-rise linear infinite,bub-sway ease-in-out infinite}
+            </style>
+            <!-- Bubbles of various sizes -->
+            <div class="sb" style="width:38px;height:38px;left:12%;animation-duration:6s,4s;animation-delay:0s,0s"></div>
+            <div class="sb" style="width:22px;height:22px;left:25%;animation-duration:5s,3.5s;animation-delay:.8s,.4s"></div>
+            <div class="sb" style="width:52px;height:52px;left:55%;animation-duration:8s,5s;animation-delay:1.5s,1s"></div>
+            <div class="sb" style="width:18px;height:18px;left:72%;animation-duration:4.5s,2.5s;animation-delay:2.2s,.8s"></div>
+            <div class="sb" style="width:30px;height:30px;left:38%;animation-duration:7s,4.5s;animation-delay:3s,1.5s"></div>
+            <div class="sb" style="width:44px;height:44px;left:80%;animation-duration:6.5s,3.8s;animation-delay:4s,2s"></div>
+            <div class="sb" style="width:16px;height:16px;left:8%;animation-duration:5.5s,3s;animation-delay:5s,2.5s"></div>
+            <div class="sb" style="width:26px;height:26px;left:62%;animation-duration:7.5s,4s;animation-delay:.4s,1.2s"></div>
+            <div class="sb" style="width:34px;height:34px;left:45%;animation-duration:6s,5s;animation-delay:1s,3s"></div>
+            <div class="sb" style="width:20px;height:20px;left:88%;animation-duration:4.8s,2.8s;animation-delay:2.8s,.6s"></div>
+            <!-- Bathtub bottom fill -->
+            <div style="position:absolute;bottom:0;left:0;right:0;height:42%;background:linear-gradient(180deg,rgba(188,214,192,.4) 0%,rgba(140,180,148,.6) 100%);border-radius:0 0 18px 18px"></div>
+            <!-- Foam / suds at water line -->
+            <div style="position:absolute;bottom:41%;left:-5%;right:-5%;height:44px;background:radial-gradient(ellipse,rgba(255,255,255,.85) 40%,transparent 71%) center/28px 22px repeat-x,radial-gradient(ellipse,rgba(255,255,255,.6) 40%,transparent 71%) 14px 8px/22px 16px repeat-x"></div>
+            <!-- Duck floating -->
+            <div style="position:absolute;bottom:43%;left:50%;transform:translateX(-50%);font-size:52px;animation:duck-bob 2.8s ease-in-out infinite;filter:drop-shadow(0 4px 8px rgba(0,0,0,.15))">🦆</div>
+            <!-- Steam -->
+            <div style="position:absolute;top:18%;left:30%;font-size:28px;opacity:.35;animation:steam 3s ease-in-out infinite">♨</div>
+            <div style="position:absolute;top:14%;left:52%;font-size:20px;opacity:.25;animation:steam 3.5s ease-in-out infinite .8s">♨</div>
+            <!-- Product bottle -->
+            <div style="position:absolute;bottom:44%;right:14%;font-size:44px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.2))">🧴</div>
+            <!-- Brand watermark -->
+            <div style="position:absolute;bottom:12px;width:100%;text-align:center;font-size:12px;font-weight:700;letter-spacing:1.5px;color:rgba(59,47,40,.4);text-transform:uppercase">teman mandi</div>
+          </div>
         </div>
       </div>
     </section>
