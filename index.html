@@ -2229,6 +2229,15 @@
   }
 })();
 </script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window._sb = supabase.createClient(
+      'https://aofbrcryxxjmminyyfpiyue.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZmJyY3J4eGptbWlueWZwaXVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQ0MDQsImV4cCI6MjA5Nzk2MDQwNH0.JgFeJVFkeC1cK-NBnf_32huZheNSQoap2iOtHOynPDk'
+    );
+  </script>
+
   <!-- Midtrans Snap -->
   <script id="midtrans-snap"
     src="https://app.sandbox.midtrans.com/snap/snap.js"
@@ -3068,6 +3077,7 @@ class Component extends DCLogic {
   state = {
     view: 'home', activeId: null, filter: 'all', search: '',
     sort: 'default', aboutOpen: false, faqActive: -1, countdown: '', zoomOpen: false,
+    sbProducts: [], promoTextOverride: '',
     cartOpen: false, cart: [], step: 'cart',
     dVariant: 0, dQty: 1,
     form: { nama:'', hp:'', alamat:'', kirim:'reguler', catatan:'' },
@@ -3076,6 +3086,31 @@ class Component extends DCLogic {
 
   componentDidMount() {
     try { const s = localStorage.getItem('tm_cart'); if (s) this.setState({ cart: JSON.parse(s) }); } catch (e) {}
+    // Load products from Supabase (falls back to hardcoded if unavailable)
+    if (window._sb) {
+      window._sb.from('products').select('*').eq('active', true).order('sort_order').order('id')
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            this.setState({ sbProducts: data });
+          }
+        }).catch(() => {});
+      // Load settings (promo text, shipping, etc.)
+      window._sb.from('settings').select('*')
+        .then(({ data }) => {
+          if (data) {
+            const s = Object.fromEntries(data.map(r => [r.key, r.value]));
+            if (s.promo_text) this.setState({ promoTextOverride: s.promo_text });
+            if (s.midtrans_client_key) {
+              const snap = document.getElementById('midtrans-snap');
+              if (snap && s.midtrans_client_key) snap.dataset.clientKey = s.midtrans_client_key;
+              const isSandbox = (s.midtrans_mode || 'sandbox') === 'sandbox';
+              if (snap) snap.src = isSandbox
+                ? 'https://app.sandbox.midtrans.com/snap/snap.js'
+                : 'https://app.midtrans.com/snap/snap.js';
+            }
+          }
+        }).catch(() => {});
+    }
     const tick = () => {
       const now = new Date(); const midnight = new Date(now); midnight.setHours(24,0,0,0);
       const diff = Math.max(0, midnight - now);
@@ -3313,7 +3348,7 @@ class Component extends DCLogic {
 
     return {
       rootStyle,
-      promoText: this.props.promoText || 'Gratis ongkir min. belanja Rp 150.000 • Pesan sekarang, kirim hari ini ✦',
+      promoText: S.promoTextOverride || this.props.promoText || 'Gratis ongkir min. belanja Rp 150.000 • Pesan sekarang, kirim hari ini ✦',
       countdown: S.countdown,
       // nav
       goHome:()=>{ this.setState({view:'home'}); window.scrollTo(0,0); },

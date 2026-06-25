@@ -117,8 +117,8 @@ tr:hover td{background:rgba(237,227,212,.3)}
   <div class="card">
     <h2>⚙️ Setup Koneksi</h2>
     <p>Masukkan URL dan Anon Key dari project Supabase kamu. Bisa dicek di <b>Settings → API</b> di dashboard Supabase.</p>
-    <div class="field"><label>Supabase URL</label><input id="setup-url" placeholder="https://xxxxx.supabase.co" /></div>
-    <div class="field"><label>Anon Key (public)</label><input id="setup-key" placeholder="eyJhbGciOiJIUzI1NiIsIn..." /></div>
+    <div class="field"><label>Supabase URL</label><input id="setup-url" placeholder="https://xxxxx.supabase.co" value="https://aofbrcryxxjmminyyfpiyue.supabase.co" /></div>
+    <div class="field"><label>Anon Key (public)</label><input id="setup-key" placeholder="eyJhbGciOiJIUzI1NiIsIn..." value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZmJyY3J4eGptbWlueWZwaXVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQ0MDQsImV4cCI6MjA5Nzk2MDQwNH0.JgFeJVFkeC1cK-NBnf_32huZheNSQoap2iOtHOynPDk" /></div>
     <div class="err" id="setup-err"></div>
     <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="saveSetup()">Simpan & Lanjut →</button>
   </div>
@@ -129,10 +129,20 @@ tr:hover td{background:rgba(237,227,212,.3)}
   <div class="card">
     <h2>🛁 Admin Login</h2>
     <p>Login dengan akun Supabase yang sudah dibuat di Authentication → Users.</p>
-    <div class="field"><label>Email</label><input id="login-email" type="email" placeholder="admin@temanmandi.com" /></div>
+    <!-- Google OAuth -->
+    <button class="btn btn-full" onclick="doGoogleLogin()" style="background:#fff;border:1.5px solid var(--line);color:var(--ink);gap:10px;margin-bottom:14px">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Masuk dengan Google
+    </button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+      <span style="font-size:12px;color:var(--muted)">atau email</span>
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+    <div class="field"><label>Email</label><input id="login-email" type="email" placeholder="admin@gmail.com" /></div>
     <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" /></div>
     <div class="err" id="login-err"></div>
-    <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="doLogin()">Masuk</button>
+    <button class="btn btn-primary btn-full" style="margin-top:4px" onclick="doLogin()">Masuk dengan Email</button>
     <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%" onclick="resetSetup()">Ubah koneksi Supabase</button>
   </div>
 </div>
@@ -351,6 +361,11 @@ let editingOrderId = null;
 window.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+  // Pre-configured Supabase connection
+  if (!localStorage.getItem('tm_sb_url')) {
+    localStorage.setItem('tm_sb_url', 'https://aofbrcryxxjmminyyfpiyue.supabase.co');
+    localStorage.setItem('tm_sb_key', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZmJyY3J4eGptbWlueWZwaXVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQ0MDQsImV4cCI6MjA5Nzk2MDQwNH0.JgFeJVFkeC1cK-NBnf_32huZheNSQoap2iOtHOynPDk');
+  }
   const url = localStorage.getItem('tm_sb_url');
   const key = localStorage.getItem('tm_sb_key');
   if (!url || !key) { show('overlay-setup'); return; }
